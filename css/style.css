@@ -70,3 +70,97 @@ body {
     font-size: 16px;
     line-height: 1.6;
 }
+
+.task-form {
+    display: flex;
+    gap: 12px;
+    margin-top: 40px;
+    padding: 12px;
+    background-color: #25282A;
+    border: 1px solid #343738;
+    border-radius: 12px;
+}
+
+.task-input,
+.date-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #E8E6DF;
+    font-size: 14px;
+}
+
+.task-input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px;
+}
+
+.task-input::placeholder {
+    color: #858A88;
+}
+
+.date-input {
+    color-scheme: dark;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.add-button {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    background-color: #A0AD91;
+    color: #191B1D;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.add-button:hover {
+    background-color: #B5C1A8;
+}
+
+@media (max-width: 600px) {
+    .task-form {
+        flex-direction: column;
+    }
+
+    .task-input,
+    .date-input,
+    .add-button {
+        width: 100%;
+    }
+}
+
+.task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0;
+    margin-top: 24px;
+    list-style: none;
+}
+
+.task-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px;
+    background-color: #25282A;
+    border: 1px solid #343738;
+    border-radius: 10px;
+}
+
+.task-title {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+}
+
+.task-date {
+    color: #858A88;
+    font-size: 13px;
+    white-space: nowrap;
+}
