@@ -1,0 +1,72 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background-color: #191B1D;
+    color: #E8E6DF;
+    font-family: Arial, sans-serif;
+}
+
+.app {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.app-header {
+    display: flex;
+    align-items: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #343738;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-mark {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background-color: #A0AD91;
+    color: #191B1D;
+    font-weight: bold;
+}
+
+.brand-name {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.main-content {
+    padding-top: 80px;
+    max-width: 650px;
+}
+
+.eyebrow {
+    color: #A0AD91;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.page-title {
+    margin-top: 16px;
+    font-size: 42px;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+.page-description {
+    color: #858A88;
+    font-size: 16px;
+    line-height: 1.6;
+}
