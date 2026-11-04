@@ -63,26 +63,98 @@ function renderTasks() {
     tasks.forEach(function(task) {
         const taskItem = createElement("li", "task-item");
 
-        const taskTitle = createElement(
-            "span",
-            "task-title",
-            task.title
-        );
+        const checkbox = createElement("input", "task-checkbox");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.completed;
 
-        taskItem.append(taskTitle);
+        checkbox.addEventListener("change", function() {
+            task.completed = checkbox.checked;
+            renderTasks();
+        });
+
+        if (task.completed) {
+            taskItem.classList.add("completed");
+        }
+
+        const taskContent = createElement("div", "task-content");
+        const taskTitle = createElement("span", "task-title", task.title);
+
+        taskContent.append(taskTitle);
 
         if (task.date) {
             const [year, month, day] = task.date.split("-");
-
             const taskDate = createElement(
                 "span",
                 "task-date",
                 `${day}.${month}.${year}`
             );
 
-            taskItem.append(taskDate);
+            taskContent.append(taskDate);
         }
 
+        const actions = createElement("div", "task-actions");
+
+        const editButton = createElement("button", "edit-button", "Изменить");
+        editButton.type = "button";
+
+        editButton.addEventListener("click", function() {
+            const editForm = createElement("form", "edit-form");
+
+            const editInput = createElement("input", "edit-input");
+            editInput.type = "text";
+            editInput.value = task.title;
+            editInput.required = true;
+            editInput.maxLength = 100;
+
+            const editDate = createElement("input", "edit-date");
+            editDate.type = "date";
+            editDate.value = task.date;
+
+            const saveButton = createElement("button", "save-button", "Сохранить");
+            saveButton.type = "submit";
+
+            const cancelButton = createElement("button", "cancel-button", "Отмена");
+            cancelButton.type = "button";
+
+            editForm.append(editInput, editDate, saveButton, cancelButton);
+
+            editForm.addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                const newTitle = editInput.value.trim();
+
+                if (!newTitle) {
+                    return;
+                }
+
+                task.title = newTitle;
+                task.date = editDate.value;
+
+                renderTasks();
+            });
+
+            cancelButton.addEventListener("click", function() {
+                renderTasks();
+            });
+
+            taskItem.replaceChildren(editForm);
+            editInput.focus();
+        });
+
+        const deleteButton = createElement("button", "delete-button", "Удалить");
+        deleteButton.type = "button";
+
+        deleteButton.addEventListener("click", function() {
+            const index = tasks.findIndex(item => item.id === task.id);
+
+            if (index !== -1) {
+                tasks.splice(index, 1);
+                renderTasks();
+            }
+        });
+
+        actions.append(editButton, deleteButton);
+        taskItem.append(checkbox, taskContent, actions);
         taskList.append(taskItem);
     });
 }
