@@ -84,13 +84,63 @@ addButton.type = "submit";
 
 taskForm.append(taskInput, dateInput, addButton);
 
-const tasks = [];
+const tasks = JSON.parse(localStorage.getItem("taskflow-tasks") || "[]");
+let activeFilter = "all";
 
 const listHeader = createElement("div", "list-header");
 const listTitle = createElement("h2", "list-title", "Список задач");
 const listCount = createElement("span", "list-count", "Всего задач: 0");
 
 listHeader.append(listTitle, listCount);
+
+const controls = createElement("section", "task-controls");
+const controlsTop = createElement("div", "controls-top");
+
+const searchInput = createElement("input", "search-input");
+searchInput.type = "search";
+searchInput.placeholder = "Поиск по задачам...";
+searchInput.setAttribute("aria-label", "Поиск задач");
+
+const sortSelect = createElement("select", "sort-select");
+sortSelect.setAttribute("aria-label", "Сортировка задач");
+
+const sortOptions = [
+    ["default", "По порядку"],
+    ["asc", "Сначала ближайшие"],
+    ["desc", "Сначала поздние"]
+];
+
+sortOptions.forEach(function([value, label]) {
+    const option = createElement("option", "", label);
+    option.value = value;
+    sortSelect.append(option);
+});
+
+controlsTop.append(searchInput, sortSelect);
+
+const filterGroup = createElement("div", "filter-group");
+const filterButtons = [];
+
+const filters = [
+    ["all", "Все"],
+    ["active", "В работе"],
+    ["completed", "Выполнено"]
+];
+
+filters.forEach(function([value, label]) {
+    const button = createElement("button", "filter-button", label);
+    button.type = "button";
+
+    button.addEventListener("click", function() {
+        activeFilter = value;
+        renderTasks();
+    });
+
+    filterButtons.push({ button, value });
+    filterGroup.append(button);
+});
+
+controls.append(controlsTop, filterGroup);
 
 const taskList = createElement("ul", "task-list");
 
@@ -104,9 +154,9 @@ const emptyDescription = createElement(
 
 emptyState.append(emptyTitle, emptyDescription);
 
-main.append(taskForm, listHeader, taskList, emptyState);
+main.append(taskForm, listHeader, controls, taskList, emptyState);
 
-function updateDashboard() {
+function updateDashboard(visibleCount) {
     const total = tasks.length;
     const completed = tasks.filter(task => task.completed).length;
     const active = total - completed;
@@ -119,14 +169,77 @@ function updateDashboard() {
     progressPercent.textContent = `${percent}%`;
     progressFill.style.width = `${percent}%`;
 
-    listCount.textContent = `Всего задач: ${total}`;
-    emptyState.hidden = total !== 0;
+    listCount.textContent = `Показано: ${visibleCount} из ${total}`;
+
+    emptyState.hidden = visibleCount !== 0;
+
+    if (total === 0) {
+        emptyTitle.textContent = "Здесь пока пусто";
+        emptyDescription.textContent = "Добавьте первую задачу, чтобы начать планировать свои дела.";
+    } else {
+        emptyTitle.textContent = "Ничего не найдено";
+        emptyDescription.textContent = "Попробуйте изменить поиск или выбрать другой фильтр.";
+    }
 }
+
+
+function getVisibleTasks() {
+    const query = searchInput.value.trim().toLowerCase();
+
+    const visibleTasks = tasks.filter(function(task) {
+        const matchesSearch = task.title.toLowerCase().includes(query);
+
+        const matchesFilter =
+            activeFilter === "all" ||
+            (activeFilter === "active" && !task.completed) ||
+            (activeFilter === "completed" && task.completed);
+
+        return matchesSearch && matchesFilter;
+    });
+
+    if (sortSelect.value !== "default") {
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+        visibleTasks.sort(function(a, b) {
+            if (!a.date && !b.date) return 0;
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+
+            if (sortSelect.value === "desc") {
+                return b.date.localeCompare(a.date);
+            }
+
+            const aPast = a.date < today;
+            const bPast = b.date < today;
+
+            if (aPast !== bPast) {
+                return aPast ? 1 : -1;
+            }
+
+            return aPast
+                ? b.date.localeCompare(a.date)
+                : a.date.localeCompare(b.date);
+        });
+    }
+
+    return visibleTasks;
+}
+
+
 
 function renderTasks() {
     taskList.replaceChildren();
 
-    tasks.forEach(function(task) {
+    filterButtons.forEach(function({ button, value }) {
+        const selected = activeFilter === value;
+        button.classList.toggle("active", selected);
+        button.setAttribute("aria-pressed", String(selected));
+    });
+
+    const visibleTasks = getVisibleTasks();
+
+    visibleTasks.forEach(function(task) {
         const taskItem = createElement("li", "task-item");
 
         const checkbox = createElement("input", "task-checkbox");
@@ -223,8 +336,13 @@ function renderTasks() {
         taskItem.append(checkbox, taskContent, actions);
         taskList.append(taskItem);
     });
-    updateDashboard();
+
+    updateDashboard(visibleTasks.length);
+    localStorage.setItem("taskflow-tasks", JSON.stringify(tasks));
 }
+
+searchInput.addEventListener("input", renderTasks);
+sortSelect.addEventListener("change", renderTasks);
 
 taskForm.addEventListener("submit", function(event) {
     event.preventDefault();
@@ -243,6 +361,8 @@ taskForm.addEventListener("submit", function(event) {
     };
 
     tasks.push(newTask);
+    searchInput.value = "";
+    activeFilter = "all";
 
     renderTasks();
 
