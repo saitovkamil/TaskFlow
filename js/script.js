@@ -98,8 +98,8 @@ const controlsTop = createElement("div", "controls-top");
 
 const searchInput = createElement("input", "search-input");
 searchInput.type = "search";
-searchInput.placeholder = "Поиск по задачам...";
-searchInput.setAttribute("aria-label", "Поиск задач");
+searchInput.placeholder = "Поиск по названию или дате...";
+searchInput.setAttribute("aria-label", "Поиск по названию или дате");
 
 const sortSelect = createElement("select", "sort-select");
 sortSelect.setAttribute("aria-label", "Сортировка задач");
@@ -183,11 +183,19 @@ function updateDashboard(visibleCount) {
 }
 
 
+
 function getVisibleTasks() {
     const query = searchInput.value.trim().toLowerCase();
 
     const visibleTasks = tasks.filter(function(task) {
-        const matchesSearch = task.title.toLowerCase().includes(query);
+        const formattedDate = task.date
+            ? task.date.split("-").reverse().join(".")
+            : "";
+
+        const matchesSearch =
+            task.title.toLowerCase().includes(query) ||
+            task.date.includes(query) ||
+            formattedDate.includes(query);
 
         const matchesFilter =
             activeFilter === "all" ||
@@ -322,6 +330,10 @@ function renderTasks() {
         const checkbox = createElement("input", "task-checkbox");
         checkbox.type = "checkbox";
         checkbox.checked = task.completed;
+        checkbox.setAttribute(
+            "aria-label",
+            `Отметить задачу «${task.title}» выполненной`
+        );
 
         checkbox.addEventListener("change", function() {
             task.completed = checkbox.checked;
@@ -417,7 +429,7 @@ function renderTasks() {
     });
 
     updateDashboard(visibleTasks.length);
-    localStorage.setItem("taskflow-tasks", JSON.stringify(tasks));
+    saveTasks();
 }
 
 searchInput.addEventListener("input", renderTasks);
