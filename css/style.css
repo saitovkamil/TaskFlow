@@ -551,3 +551,20 @@ body {
         padding: 10px 8px;
     }
 }
+
+.task-item[draggable="true"] {
+    cursor: grab;
+}
+
+.task-item[draggable="true"]:active {
+    cursor: grabbing;
+}
+
+.task-item.dragging {
+    opacity: 0.4;
+}
+
+.task-item.drag-over {
+    outline: 2px solid #A0AD91;
+    outline-offset: 2px;
+}

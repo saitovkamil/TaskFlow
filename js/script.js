@@ -228,6 +228,7 @@ function getVisibleTasks() {
 
 
 
+
 function renderTasks() {
     taskList.replaceChildren();
 
@@ -239,8 +240,84 @@ function renderTasks() {
 
     const visibleTasks = getVisibleTasks();
 
+    const canDrag =
+        activeFilter === "all" &&
+        sortSelect.value === "default" &&
+        searchInput.value.trim() === "";
+
     visibleTasks.forEach(function(task) {
         const taskItem = createElement("li", "task-item");
+
+        taskItem.draggable = canDrag;
+
+        taskItem.addEventListener("dragstart", function(event) {
+            if (!canDrag) {
+                event.preventDefault();
+                return;
+            }
+
+            event.dataTransfer.setData("text/plain", task.id);
+            event.dataTransfer.effectAllowed = "move";
+
+            taskItem.classList.add("dragging");
+        });
+
+        taskItem.addEventListener("dragend", function() {
+            taskItem.classList.remove("dragging");
+            taskItem.classList.remove("drag-over");
+        });
+
+        taskItem.addEventListener("dragover", function(event) {
+            if (!canDrag) return;
+
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+
+            taskItem.classList.add("drag-over");
+        });
+
+        taskItem.addEventListener("dragleave", function(event) {
+            if (!taskItem.contains(event.relatedTarget)) {
+                taskItem.classList.remove("drag-over");
+            }
+        });
+
+        taskItem.addEventListener("drop", function(event) {
+            if (!canDrag) return;
+
+            event.preventDefault();
+            taskItem.classList.remove("drag-over");
+
+            const draggedId = event.dataTransfer.getData("text/plain");
+
+            if (!draggedId || draggedId === task.id) return;
+
+            const fromIndex = tasks.findIndex(item => item.id === draggedId);
+
+            if (fromIndex === -1) return;
+
+            const middle = taskItem.getBoundingClientRect().top +
+                taskItem.offsetHeight / 2;
+
+            const insertAfter = event.clientY > middle;
+
+            const [movedTask] = tasks.splice(fromIndex, 1);
+
+            let toIndex = tasks.findIndex(item => item.id === task.id);
+
+            if (toIndex === -1) {
+                tasks.splice(fromIndex, 0, movedTask);
+                return;
+            }
+
+            if (insertAfter) {
+                toIndex++;
+            }
+
+            tasks.splice(toIndex, 0, movedTask);
+
+            renderTasks();
+        });
 
         const checkbox = createElement("input", "task-checkbox");
         checkbox.type = "checkbox";
@@ -277,6 +354,8 @@ function renderTasks() {
         editButton.type = "button";
 
         editButton.addEventListener("click", function() {
+            taskItem.draggable = false;
+
             const editForm = createElement("form", "edit-form");
 
             const editInput = createElement("input", "edit-input");
